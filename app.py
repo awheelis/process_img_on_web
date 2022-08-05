@@ -4,18 +4,19 @@ from werkzeug.utils import secure_filename
 import numpy as np
 from PIL import Image
 import process_imgs
+import cv2
 
 
 UPLOAD_FOLDER = os.path.dirname(os.path.abspath(__file__)) + '/uploads/'
 DOWNLOAD_FOLDER = os.path.dirname(os.path.abspath(__file__)) + '/downloads/'
-ALLOWED_EXTENSIONS = set(['png', 'jpg', 'jpeg', 'gif'])
+ALLOWED_EXTENSIONS = set(['png', 'jpg', 'jpeg', 'gif', 'mp4', 'mov'])
 
 app = Flask(__name__, static_url_path="/static")
 DIR_PATH = os.path.dirname(os.path.realpath(__file__))
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 app.config['DOWNLOAD_FOLDER'] = DOWNLOAD_FOLDER
 # limit upload size upto 8mb
-app.config['MAX_CONTENT_LENGTH'] = 8 * 1024 * 1024
+# app.config['MAX_CONTENT_LENGTH'] = 8 * 1024 * 1024
 
 
 def allowed_file(filename):
@@ -40,20 +41,34 @@ def index():
 
             if request.form["submit_button"] == "Invert":
                 img = process_imgs.invert(img_path)
-                return_file(img, filename)
+                return_image(img, filename)
 
             elif request.form["submit_button"] == "Flip":
-                print("flip")
                 img = process_imgs.flip(img_path)
-                return_file(img, filename)
+                return_image(img, filename)
+
+            elif request.form["submit_button"] == "Background Suppress":
+                video = process_imgs.suppress_background(img_path)
+                return_video(video, filename)
+
             return redirect(url_for('uploaded_file', filename=filename))
     return render_template('index.html')
 
 
-def return_file(img_arr, filename):
+def return_image(img_arr, filename):
     output_stream = open(app.config['DOWNLOAD_FOLDER'] + filename, 'wb')
     pil_img = Image.fromarray(img_arr)
     pil_img.save(output_stream)
+
+def return_video(video_arr, filename):
+    output_stream = open(app.config['DOWNLOAD_FOLDER'] + filename, 'wb')
+    width = video_arr.shape[1]
+    height = video_arr.shape[2]
+    video=cv2.VideoWriter(filename,-1,1,(width,height))
+    video_arr = video_arr.astype(np.uint8)
+    for frame in video_arr:
+        print(frame.shape)
+        video.write(frame)
 
 @app.route('/uploads/<filename>')
 def uploaded_file(filename):
