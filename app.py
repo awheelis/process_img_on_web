@@ -1,9 +1,9 @@
 import os
 from flask import Flask, request, redirect, url_for, render_template, send_from_directory
 from werkzeug.utils import secure_filename
-import matplotlib.pyplot as plt
 import numpy as np
 from PIL import Image
+import process_imgs
 
 
 UPLOAD_FOLDER = os.path.dirname(os.path.abspath(__file__)) + '/uploads/'
@@ -29,26 +29,27 @@ def index():
             print('No file attached in request')
             return redirect(request.url)
         file = request.files['file']
+
         if file.filename == '':
             print('No file selected')
             return redirect(request.url)
         if file and allowed_file(file.filename):
             filename = secure_filename(file.filename)
             file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
-            process_file(os.path.join(app.config['UPLOAD_FOLDER'], filename), filename)
+            img_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+            if request.form["submit_button"] == "Invert":
+                img = process_imgs.invert(img_path)
+                return_file(img, filename)
+            elif request.form["submit_button"] == "Flip":
+                print("flip")
             return redirect(url_for('uploaded_file', filename=filename))
     return render_template('index.html')
 
 
-def process_file(path, filename):
-    image = np.array(Image.open(path).convert('L'))
-    image[:100, :100] = 0
+def return_file(img_arr, filename):
     output_stream = open(app.config['DOWNLOAD_FOLDER'] + filename, 'wb')
-    pil_img = Image.fromarray(image)
+    pil_img = Image.fromarray(img_arr)
     pil_img.save(output_stream)
-    # with open(path, 'a') as f:
-    #    f.write("\nAdded processed content")
-
 
 @app.route('/uploads/<filename>')
 def uploaded_file(filename):
