@@ -41,17 +41,13 @@ def index():
 
 
 def process_file(path, filename):
-    remove_watermark(path, filename)
-    # with open(path, 'a') as f:
-    #    f.write("\nAdded processed content")
-
-
-def remove_watermark(path, filename):
     image = np.array(Image.open(path).convert('L'))
     image[:100, :100] = 0
     output_stream = open(app.config['DOWNLOAD_FOLDER'] + filename, 'wb')
     pil_img = Image.fromarray(image)
     pil_img.save(output_stream)
+    # with open(path, 'a') as f:
+    #    f.write("\nAdded processed content")
 
 
 @app.route('/uploads/<filename>')
