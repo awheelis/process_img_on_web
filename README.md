@@ -1,5 +1,5 @@
 # background suppression app
-This Flask App would remove CamScanner watermark from scanned pdfs.
+This Flask App takes in a camera
 
 Post Link : https://viveksb007.wordpress.com/2018/04/07/uploading-processing-and-downloading-files-in-flask/
 
