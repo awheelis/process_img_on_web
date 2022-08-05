@@ -37,11 +37,15 @@ def index():
             filename = secure_filename(file.filename)
             file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
             img_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+
             if request.form["submit_button"] == "Invert":
                 img = process_imgs.invert(img_path)
                 return_file(img, filename)
+
             elif request.form["submit_button"] == "Flip":
                 print("flip")
+                img = process_imgs.flip(img_path)
+                return_file(img, filename)
             return redirect(url_for('uploaded_file', filename=filename))
     return render_template('index.html')
 

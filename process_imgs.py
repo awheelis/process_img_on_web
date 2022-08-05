@@ -9,8 +9,16 @@ def invert(img_path):
     img = img - 255
     img = img * -1
     img = img.astype(np.uint8)
-    print(img.dtype)
     return img
+
+def flip(img_path):
+    img = np.array(Image.open(img_path))
+    # subtract entire image by 255 and mult by -1
+    img = np.rot90(img)
+    img = img.astype(np.uint8)
+    return img
+
+
 
 def main():
     None
