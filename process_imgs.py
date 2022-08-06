@@ -5,8 +5,10 @@ import matplotlib.pyplot as plt
 import bottleneck as bn
 import cv2
 
-H_PERCENT = .99 # upper clipping thresh
-L_PERCENT = 0.01 # lower clipping thresh
+import logging
+
+H_PERCENT = 99 # upper clipping thresh
+L_PERCENT = 1 # lower clipping thresh
 
 def invert(img_path):
     img = np.array(Image.open(img_path))
@@ -30,7 +32,7 @@ def suppress_background(video_path):
     success, image = vidcap.read()
     img_array = []
     count = 0
-    while success and count < 100:
+    while success and count < 1000:
         success, image = vidcap.read()
         if success:
             # print(success)
@@ -39,34 +41,32 @@ def suppress_background(video_path):
             count += 1
             # print(len(img_array))
     # use bottleneck (bn) for cal   culations
-    print("converting to array")
-    img_array = np.array(img_array).astype(np.uint8)
-    print(img_array.shape)
+    logging.basicConfig(format='%(asctime)s - %(message)s', level=logging.INFO, datefmt='%H:%M:%S')
+
+    logging.info("converting list to array")
+    img_array = np.array(img_array).astype(np.float64)
+
+    logging.info("normalizing image")
+    img_array = linear_normalization(img_array)
+
+    logging.info("clipping video based on thresh")
+    img_array = clip_img(img_array, H_PERCENT, L_PERCENT)
+
+    logging.info("Getting MEAN frame")
     mean_vid = bn.nanmean(img_array, axis = 0)
-    print("got mean frame")
+
+    logging.info("Getting STD frame")
     std_vid = bn.nanstd(img_array, axis = 0)
-    print("got std frame")
-    # do (video - med)/std
 
-    print(np.max(std_vid), np.min(std_vid))
-    print("std(std): ", np.std(std_vid))
-    print("mean(std): ", np.mean(std_vid))
-    print("std(mean): ", np.std(mean_vid))
-    print("mean(mean): ", np.mean(mean_vid))
-
-    # clip!
+    logging.info("Clip mean and std")
     mean_vid = clip_img(mean_vid, H_PERCENT, L_PERCENT)
     std_vid = clip_img(std_vid, H_PERCENT, L_PERCENT)
-    print(np.max(std_vid), np.min(std_vid))
-    print("std(std): ", np.std(std_vid))
-    print("mean(std): ", np.mean(std_vid))
-    print("std(mean): ", np.std(mean_vid))
-    print("mean(mean): ", np.mean(mean_vid))
-    img_array -= mean_vid.astype(np.uint8)
 
-    print(img_array.shape)
-    # normalize and clip
-    # image_array -= np.max
+    logging.info("subtracting mean and dividing std")
+    img_array -= mean_vid
+    img_array /= std_vid
+    img_array = img_array.astype(np.uint8)
+    logging.info("done w processing...sending to user...")
 
     return img_array
 
@@ -84,6 +84,15 @@ def clip_img(arr, h, l):
     clip_min = np.percentile(arr, l)
 
     arr = np.clip(arr, clip_min, clip_max)
+    return arr
+
+def linear_normalization(arr):
+    """
+    scales from 0-1 with x' = (x - xmin)/(xmax - xmin)
+    arr: array
+        image/video array
+    """
+    arr = (arr - np.min(arr))/(np.max(arr) - np.min(arr))
     return arr
 
 def main():
