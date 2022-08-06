@@ -1,5 +1,5 @@
 import os
-from flask import Flask, request, redirect, url_for, render_template, send_from_directory
+from flask import Flask, request, redirect, url_for, render_template, send_from_directory, send_file
 from werkzeug.utils import secure_filename
 import numpy as np
 from PIL import Image
@@ -60,15 +60,29 @@ def return_image(img_arr, filename):
     pil_img = Image.fromarray(img_arr)
     pil_img.save(output_stream)
 
-def return_video(video_arr, filename):
-    output_stream = open(app.config['DOWNLOAD_FOLDER'] + filename, 'wb')
-    width = video_arr.shape[1]
-    height = video_arr.shape[2]
-    video=cv2.VideoWriter(filename,-1,1,(width,height))
-    video_arr = video_arr.astype(np.uint8)
+def return_video(video_arr, file_path):
+    """
+    video_arr: np array of video frames
+    file_path: file location 
+    """
+    w, h = int(video_arr.shape[1]), int(video_arr.shape[2])
+    fps = 25
+    out = cv2.VideoWriter(app.config['DOWNLOAD_FOLDER'] + file_path, cv2.VideoWriter_fourcc(*'mp4v'), fps, (h, w), 0)
     for frame in video_arr:
-        print(frame.shape)
-        video.write(frame)
+        out.write(frame)
+    out.release()
+
+
+
+    # file_loc = app.config['DOWNLOAD_FOLDER'] + file_path
+    # w, h = video_arr.shape[1], video_arr.shape[2]
+    # print(w, h)
+    # out = cv2.VideoWriter('outpy.avi',cv2.VideoWriter_fourcc('M','J','P','G'), 10, (w, h), isColor = False)
+    # for frame in video_arr:
+    #     out.write(frame)
+
+    # out.release() 
+    # send_file(file_path, as_attachment = True)
 
 @app.route('/uploads/<filename>')
 def uploaded_file(filename):

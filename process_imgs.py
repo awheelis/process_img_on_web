@@ -26,30 +26,29 @@ def suppress_background(video_path):
     vidcap = cv2.VideoCapture(video_path)
     success, image = vidcap.read()
     img_array = []
-    while success:
+    # count = 100
+    while success:# and count < 100:
         success, image = vidcap.read()
         if success:
             # print(success)
             img_gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
             img_array.append(img_gray)
+            # count += 1
             # print(len(img_array))
-
-    # use bottleneck (bn) for calculations
+    # use bottleneck (bn) for cal   culations
     print("converting to array")
     img_array = np.array(img_array).astype(np.uint8)
     print(img_array.shape)
     mean_vid = bn.nanmean(img_array, axis = 0).astype(np.uint8)
     print("got mean frame")
-    # std_vid = bn.nanstd(img_array, axis = 0)
+    # std_vid = bn.nanstd(img_array, axis = 0).astype(np.uint8)
     # print("got std frame")
-    # print(std_vid.shape)
-    # std_vid = std_vid.astype(np.unit8)
-    # print(std_vid.shape)
-    # compute the std of stack
-    # compute median of stack
     # do (video - med)/std
-    # return video 
     img_array -= mean_vid
+    
+    # normalize and clip
+    image_array -= np.max
+
     return img_array
 
 def main():
