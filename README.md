@@ -5,3 +5,5 @@ Post Link : https://viveksb007.wordpress.com/2018/04/07/uploading-processing-and
 
 Demo Link : https://www.youtube.com/watch?v=tANTbMUk7jc
 
+Hand dataset for detection and segmentation
+https://www.kaggle.com/datasets/danieldelro/freihand
