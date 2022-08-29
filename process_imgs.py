@@ -65,7 +65,7 @@ def suppress_background(video_path):
     logging.info("Getting STD frame")
     std_vid = bn.nanstd(img_array, axis = 0)
 
-    logging.info("subtracting mean and dividing std")
+    logging.info("subtracting mean and dividing std") 
     img_array -= mean_vid
     img_array /= std_vid
 
