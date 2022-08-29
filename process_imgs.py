@@ -4,9 +4,12 @@ from PIL import Image
 import matplotlib.pyplot as plt
 import bottleneck as bn
 import cv2
-
 import logging
 
+# TODO: make a pull request, code, and then a merge request
+# TODO: add file and function headers 
+
+K = 2.5 # background suppression threshold
 H_PERCENT = 99 # upper clipping thresh
 L_PERCENT = 1 # lower clipping thresh
 
@@ -27,16 +30,20 @@ def flip(img_path):
     return img
 
 def suppress_background(video_path):
+
+    # TODO: add a time estimate
+
     # read in video
     vidcap = cv2.VideoCapture(video_path)
     success, image = vidcap.read()
     img_array = []
     count = 0
-    while success and count < 1000:
+    while success and count < 100:
         success, image = vidcap.read()
         if success:
             # print(success)
             img_gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+            # img_gray = cv2.blur(img_gray, (5,5))
             img_array.append(img_gray)
             count += 1
             # print(len(img_array))
@@ -46,25 +53,28 @@ def suppress_background(video_path):
     logging.info("converting list to array")
     img_array = np.array(img_array).astype(np.float64)
 
-    logging.info("normalizing image")
-    img_array = linear_normalization(img_array)
-
     logging.info("clipping video based on thresh")
     img_array = clip_img(img_array, H_PERCENT, L_PERCENT)
 
-    logging.info("Getting MEAN frame")
-    mean_vid = bn.nanmean(img_array, axis = 0)
+    logging.info("normalizing image")
+    img_array = linear_normalization(img_array)
+    
+    logging.info("Getting MEDIAN frame")
+    mean_vid = bn.median(img_array, axis = 0)
 
     logging.info("Getting STD frame")
     std_vid = bn.nanstd(img_array, axis = 0)
 
-    logging.info("Clip mean and std")
-    mean_vid = clip_img(mean_vid, H_PERCENT, L_PERCENT)
-    std_vid = clip_img(std_vid, H_PERCENT, L_PERCENT)
-
     logging.info("subtracting mean and dividing std")
     img_array -= mean_vid
     img_array /= std_vid
+
+    # TODO: threshold it by k...
+    img_array = (img_array > K).astype(np.uint8)
+
+    # TODO: convert to values from 0-255
+    img_array *= 255
+
     img_array = img_array.astype(np.uint8)
     logging.info("done w processing...sending to user...")
 
